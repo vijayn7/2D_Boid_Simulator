@@ -19,6 +19,9 @@ struct BoidParams {
     float numBoids = 500.0f;
 
     bool drawVelocityVectors = false;
+    bool useBruteForce = true;
+    bool useGridHandler = false;
+    bool showGridLines = false;
 };
 
 // Slider struct for UI
@@ -64,6 +67,48 @@ struct Slider {
             float normalizedPos = (mousePos.x - x) / width;
             normalizedPos = std::max(0.0f, std::min(1.0f, normalizedPos));
             *value = minVal + normalizedPos * (maxVal - minVal);
+        }
+    }
+};
+
+// Radio button struct for UI
+struct RadioButton {
+    const char* label;
+    bool* value;
+    float x, y;
+    int size;
+
+    void draw() {
+        // Radio button circle
+        int centerX = x + size / 2;
+        int centerY = y + size / 2 - 4;
+        DrawCircleLines(centerX, centerY, size / 2, {80, 80, 80, 200});
+        
+        // Fill if selected
+        if (*value) {
+            DrawCircle(centerX, centerY, size / 2 - 3, RAYWHITE);
+        }
+        
+        // Label (after radio button)
+        DrawText(label, x + 25, y - 2, 12, RAYWHITE);
+    }
+
+    void update(std::vector<RadioButton>& group) {
+        if (!IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) return;
+        
+        Vector2 mousePos = GetMousePosition();
+        int centerX = x + size / 2;
+        int centerY = y + size / 2 - 4;
+        
+        // Check if clicked on radio button
+        float dx = mousePos.x - centerX;
+        float dy = mousePos.y - centerY;
+        if (dx * dx + dy * dy <= (size / 2) * (size / 2)) {
+            // Deselect all in group, select this one
+            for (auto& radio : group) {
+                *radio.value = false;
+            }
+            *value = true;
         }
     }
 };
@@ -130,8 +175,13 @@ public:
         sliders.push_back({"Bird Size", &params.birdSize, 2.0f, 20.0f, 0, sliderSpacing * 7, sliderWidth, sliderHeight});
         sliders.push_back({"Num Boids", &params.numBoids, 10.0f, 1000.0f, 0, sliderSpacing * 8, sliderWidth, sliderHeight});
         
+        // Initialize radio buttons for algorithm selection
+        radioButtons.push_back({"Brute Force", &params.useBruteForce, 0, 0, 14});
+        radioButtons.push_back({"Grid (Spatial)", &params.useGridHandler, 0, 25, 14});
+        
         // Initialize checkboxes
         checkboxes.push_back({"Draw Velocity Vectors", &params.drawVelocityVectors, 0, 0, 14});
+        checkboxes.push_back({"Show Grid Lines", &params.showGridLines, 0, 25, 14});
     }
 
     void update(float fps) {
@@ -143,6 +193,34 @@ public:
         // Update sliders
         for (auto& slider : sliders) {
             slider.update();
+        }
+        
+        // Update radio buttons with mutual exclusion
+        if (radioButtons.size() >= 2) {
+            // Check if brute force is clicked
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                Vector2 mousePos = GetMousePosition();
+                
+                // Check brute force button
+                int centerX = radioButtons[0].x + radioButtons[0].size / 2;
+                int centerY = radioButtons[0].y + radioButtons[0].size / 2 - 4;
+                float dx = mousePos.x - centerX;
+                float dy = mousePos.y - centerY;
+                if (dx * dx + dy * dy <= (radioButtons[0].size / 2) * (radioButtons[0].size / 2)) {
+                    params.useBruteForce = true;
+                    params.useGridHandler = false;
+                }
+                
+                // Check grid button
+                centerX = radioButtons[1].x + radioButtons[1].size / 2;
+                centerY = radioButtons[1].y + radioButtons[1].size / 2 - 4;
+                dx = mousePos.x - centerX;
+                dy = mousePos.y - centerY;
+                if (dx * dx + dy * dy <= (radioButtons[1].size / 2) * (radioButtons[1].size / 2)) {
+                    params.useBruteForce = false;
+                    params.useGridHandler = true;
+                }
+            }
         }
         
         // Update checkboxes
@@ -220,11 +298,26 @@ public:
             sliders[i].draw();
         }
         
-        // Draw checkboxes below the sliders
-        int checkboxStartY = y + 170 + sliders.size() * 36 + 20;
+        // Draw algorithm selection section
+        int algorithmStartY = y + 170 + sliders.size() * 36 + 20;
+        DrawText("Algorithm:", x + 10, algorithmStartY, 14, RAYWHITE);
+        DrawLine(x + 10, algorithmStartY + 18, x + width - 10, algorithmStartY + 18, {100, 100, 100, 100});
+        
+        // Draw radio buttons
+        for (size_t i = 0; i < radioButtons.size(); i++) {
+            radioButtons[i].x = x + 10;
+            radioButtons[i].y = algorithmStartY + 25 + i * 25;
+            radioButtons[i].draw();
+        }
+        
+        // Draw checkboxes below the radio buttons
+        int checkboxStartY = algorithmStartY + 25 + radioButtons.size() * 25 + 20;
+        DrawText("Display Options:", x + 10, checkboxStartY, 14, RAYWHITE);
+        DrawLine(x + 10, checkboxStartY + 18, x + width - 10, checkboxStartY + 18, {100, 100, 100, 100});
+        
         for (size_t i = 0; i < checkboxes.size(); i++) {
             checkboxes[i].x = x + 10;
-            checkboxes[i].y = checkboxStartY + i * 25;
+            checkboxes[i].y = checkboxStartY + 25 + i * 25;
             checkboxes[i].draw();
         }
     }
@@ -235,6 +328,7 @@ public:
 
 private:
     std::vector<Slider> sliders;
+    std::vector<RadioButton> radioButtons;
     std::vector<Checkbox> checkboxes;
 };
 

@@ -3,6 +3,9 @@
 #include <vector>
 #include "Sidebar.h"
 
+// Forward declaration
+class boidHandler;
+
 struct Boid {
     Vec2 pos;
     Vec2 vel;
@@ -18,17 +21,17 @@ struct Boid {
     }
 
     // Flocking behaviors: This make the boid steer towards the average position of local flockmates
-    Vec2 cohesion(const std::vector<Boid>& boids, float neighborRadius, float maxSpeed, float maxForce) const {
+    Vec2 cohesion(const std::vector<Boid*>& boids, float neighborRadius, float maxSpeed, float maxForce) const {
         // sensing distance squared
         float r2 = neighborRadius * neighborRadius;
 
         Vec2 center = {0,0};
         int count = 0;
 
-        for (const auto& other : boids) {
-            if (&other == this) continue;
-            if (distSquared(pos, other.pos) <= r2) {
-                center += other.pos;
+        for (const auto* other : boids) {
+            if (other == this) continue;
+            if (distSquared(pos, other->pos) <= r2) {
+                center += other->pos;
                 count++;
             }
         }
@@ -46,16 +49,16 @@ struct Boid {
     }
 
     // This makes the boid align its velocity with the average velocity of local flockmates
-    Vec2 alignment(const std::vector<Boid>& boids, float neighborRadius, float maxSpeed, float maxForce) const {
+    Vec2 alignment(const std::vector<Boid*>& boids, float neighborRadius, float maxSpeed, float maxForce) const {
         float r2 = neighborRadius * neighborRadius;
 
         Vec2 avgVel = {0,0};
         int count = 0;
 
-        for (const auto& other : boids) {
-            if (&other == this) continue;
-            if (distSquared(pos, other.pos) <= r2) {
-                avgVel += other.vel;
+        for (const auto* other : boids) {
+            if (other == this) continue;
+            if (distSquared(pos, other->pos) <= r2) {
+                avgVel += other->vel;
                 count++;
             }
         }
@@ -71,18 +74,18 @@ struct Boid {
     }
 
     // This makes the boid steer to avoid crowding local flockmates
-    Vec2 separation(const std::vector<Boid>& boids, float separationRadius, float maxSpeed, float maxForce) const {
+    Vec2 separation(const std::vector<Boid*>& boids, float separationRadius, float maxSpeed, float maxForce) const {
         float r2 = separationRadius * separationRadius;
 
         Vec2 push = {0,0};
         int count = 0;
 
-        for (const auto& other : boids) {
-            if (&other == this) continue;
+        for (const auto* other : boids) {
+            if (other == this) continue;
 
-            float d2 = distSquared(pos, other.pos);
+            float d2 = distSquared(pos, other->pos);
             if (d2 > 0.0001f && d2 < r2) {
-                Vec2 away = pos - other.pos;
+                Vec2 away = pos - other->pos;
                 away = away / d2; // stronger when closer
                 push += away;
                 count++;
@@ -152,37 +155,3 @@ static void wrap(Vec2& p, int W, int H) {
     if (p.y < 0) p.y += H;
     if (p.y >= H) p.y -= H;
 }
-
-static void stepBoids(std::vector<Boid>& boids, const Sidebar& sidebar, float dt, int W, int H) {
-    
-    for (auto& b : boids) {
-            Vec2 sep = b.separation(boids, sidebar.params.separationRadius, sidebar.params.maxSpeed, sidebar.params.maxForce);
-            Vec2 ali = b.alignment(boids,  sidebar.params.neighborRadius,  sidebar.params.maxSpeed, sidebar.params.maxForce);
-            Vec2 coh = b.cohesion(boids,   sidebar.params.neighborRadius,  sidebar.params.maxSpeed, sidebar.params.maxForce);
-
-            b.applyForce(sep * sidebar.params.separationWeight);
-            b.applyForce(ali * sidebar.params.alignmentWeight);
-            b.applyForce(coh * sidebar.params.cohesionWeight);
-        }
-
-    for (auto& b : boids) {
-        b.update(dt, sidebar.params.maxSpeed);
-        wrap(b.pos, W, H);
-    }
-
-    // Handle boid count changes
-    int targetBoids = (int)sidebar.params.numBoids;
-    if (targetBoids > boids.size()) {
-        // Spawn new boids
-        for (int i = boids.size(); i < targetBoids; i++) {
-            Boid b;
-            b.pos = { (float)GetRandomValue(0, W-1), (float)GetRandomValue(0, H-1) };
-            b.vel = { (float)GetRandomValue(-100, 100), (float)GetRandomValue(-100, 100) };
-            boids.push_back(b);
-        }
-    } else if (targetBoids < boids.size()) {
-        // Remove excess boids
-        boids.resize(targetBoids);
-    }
-}
-
