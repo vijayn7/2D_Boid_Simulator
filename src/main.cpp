@@ -58,7 +58,7 @@ int main() {
     SetTargetFPS(60);
 
     std::vector<Boid> boids;
-    const int N = 200;
+    const int N = 500;
 
     // Initialize boids with random positions and velocities
     for (int i = 0; i < N; i++) {
