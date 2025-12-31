@@ -76,16 +76,21 @@ int main() {
     const float alignmentWeight = 1.0f;
     const float cohesionWeight  = 0.8f;
 
+    const float separationRadius = 28.0f;
+    const float separationWeight = 1.6f;
+
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
 
         for (auto& b : boids) {
-            Vec2 ali = b.alignment(boids, neighborRadius, maxSpeed, maxForce);
-            Vec2 coh = b.cohesion(boids,  neighborRadius, maxSpeed, maxForce);
+            Vec2 sep = b.separation(boids, separationRadius, maxSpeed, maxForce);
+            Vec2 ali = b.alignment(boids,  neighborRadius,  maxSpeed, maxForce);
+            Vec2 coh = b.cohesion(boids,   neighborRadius,  maxSpeed, maxForce);
 
+            b.applyForce(sep * separationWeight);
             b.applyForce(ali * alignmentWeight);
             b.applyForce(coh * cohesionWeight);
-    }
+        }
 
         for (auto& b : boids) {
             b.update(dt, maxSpeed);
@@ -97,7 +102,7 @@ int main() {
 
         for (const auto& b : boids) drawBoid(b);
 
-        DrawText("Step 4: cohesion + alignment", 20, 20, 20, DARKGRAY);
+        DrawText("Step 5: separation + alignment + cohesion", 20, 20, 20, DARKGRAY);
         EndDrawing();
 
     }

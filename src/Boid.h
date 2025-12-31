@@ -64,4 +64,31 @@ struct Boid {
         Vec2 steer = desired - vel;
         return limitForce(steer, maxForce);
     }
+
+    Vec2 separation(const std::vector<Boid>& boids, float separationRadius, float maxSpeed, float maxForce) const {
+        float r2 = separationRadius * separationRadius;
+
+        Vec2 push = {0,0};
+        int count = 0;
+
+        for (const auto& other : boids) {
+            if (&other == this) continue;
+
+            float d2 = dist2(pos, other.pos);
+            if (d2 > 0.0001f && d2 < r2) {
+                Vec2 away = pos - other.pos;
+                away = away / d2; // stronger when closer
+                push += away;
+                count++;
+            }
+        }
+
+        if (count == 0) return {0,0};
+
+        push = push / (float)count;
+        Vec2 desired = normalize(push) * maxSpeed;
+
+        Vec2 steer = desired - vel;
+        return limitForce(steer, maxForce);
+    }
 };
