@@ -2,6 +2,7 @@
 #include <vector>
 #include <cmath>
 #include "Boid.h"
+#include "Sidebar.h"
 
 // Wrap around the screen edges
 static void wrap(Vec2& p, int W, int H) {
@@ -53,9 +54,11 @@ static void drawBoid(const Boid& b) {
 int main() {
     const int W = 1000;
     const int H = 700;
+    const int graphW = 350;
+    const int graphH = 300;
 
-    InitWindow(W, H, "Boids - raylib");
-    SetTargetFPS(60);
+    InitWindow(W + graphW + 40, H, "Boids - raylib");
+    SetTargetFPS(240);
 
     std::vector<Boid> boids;
     const int N = 500;
@@ -72,12 +75,13 @@ int main() {
 
     const float neighborRadius = 70.0f;
     const float maxForce = 220.0f;
+    const float separationRadius = 28.0f;
 
     const float alignmentWeight = 1.0f;
     const float cohesionWeight  = 0.8f;
-
-    const float separationRadius = 28.0f;
     const float separationWeight = 1.6f;
+
+    Sidebar sidebar;
 
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
@@ -97,12 +101,21 @@ int main() {
             wrap(b.pos, W, H);
         }
 
+        // Update FPS graph
+        sidebar.update(GetFPS());
+
         BeginDrawing();
         ClearBackground(BLACK);
 
+        // Draw boids on the left
         for (const auto& b : boids) drawBoid(b);
 
-        DrawText("Step 5: separation + alignment + cohesion", 20, 20, 20, DARKGRAY);
+        // Draw border line between boid section and FPS graph
+        DrawLine(W, 0, W, H, RAYWHITE);
+
+        // Draw FPS graph on the right
+        sidebar.draw(W + 20, 20, graphW, graphH);
+
         EndDrawing();
 
     }

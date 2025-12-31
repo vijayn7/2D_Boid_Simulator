@@ -70,7 +70,7 @@ inline Vec2 clampMag(const Vec2& v, float maxLen) {
     return v * (maxLen / L);
 }
 
-inline float dist2(const Vec2& a, const Vec2& b) {
+inline float distSquared(const Vec2& a, const Vec2& b) {
     float dx = a.x - b.x;
     float dy = a.y - b.y;
     return dx*dx + dy*dy;

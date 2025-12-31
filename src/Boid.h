@@ -16,7 +16,9 @@ struct Boid {
         acc = {0,0};
     }
 
+    // Flocking behaviors: This make the boid steer towards the average position of local flockmates
     Vec2 cohesion(const std::vector<Boid>& boids, float neighborRadius, float maxSpeed, float maxForce) const {
+        // sensing distance squared
         float r2 = neighborRadius * neighborRadius;
 
         Vec2 center = {0,0};
@@ -24,7 +26,7 @@ struct Boid {
 
         for (const auto& other : boids) {
             if (&other == this) continue;
-            if (dist2(pos, other.pos) < r2) {
+            if (distSquared(pos, other.pos) <= r2) {
                 center += other.pos;
                 count++;
             }
@@ -37,10 +39,12 @@ struct Boid {
         Vec2 desired = center - pos;
         desired = normalize(desired) * maxSpeed;
 
+        // Steering = Desired position - Current velocity
         Vec2 steer = desired - vel;
         return limitForce(steer, maxForce);
     }
 
+    // This makes the boid align its velocity with the average velocity of local flockmates
     Vec2 alignment(const std::vector<Boid>& boids, float neighborRadius, float maxSpeed, float maxForce) const {
         float r2 = neighborRadius * neighborRadius;
 
@@ -49,7 +53,7 @@ struct Boid {
 
         for (const auto& other : boids) {
             if (&other == this) continue;
-            if (dist2(pos, other.pos) < r2) {
+            if (distSquared(pos, other.pos) <= r2) {
                 avgVel += other.vel;
                 count++;
             }
@@ -65,6 +69,7 @@ struct Boid {
         return limitForce(steer, maxForce);
     }
 
+    // This makes the boid steer to avoid crowding local flockmates
     Vec2 separation(const std::vector<Boid>& boids, float separationRadius, float maxSpeed, float maxForce) const {
         float r2 = separationRadius * separationRadius;
 
@@ -74,7 +79,7 @@ struct Boid {
         for (const auto& other : boids) {
             if (&other == this) continue;
 
-            float d2 = dist2(pos, other.pos);
+            float d2 = distSquared(pos, other.pos);
             if (d2 > 0.0001f && d2 < r2) {
                 Vec2 away = pos - other.pos;
                 away = away / d2; // stronger when closer
