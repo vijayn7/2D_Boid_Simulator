@@ -24,7 +24,6 @@ struct Boid {
 
         for (const auto& other : boids) {
             if (&other == this) continue;
-
             if (dist2(pos, other.pos) < r2) {
                 center += other.pos;
                 count++;
@@ -39,7 +38,30 @@ struct Boid {
         desired = normalize(desired) * maxSpeed;
 
         Vec2 steer = desired - vel;
-        steer = limitForce(steer, maxForce);
-        return steer;
+        return limitForce(steer, maxForce);
+    }
+
+    Vec2 alignment(const std::vector<Boid>& boids, float neighborRadius, float maxSpeed, float maxForce) const {
+        float r2 = neighborRadius * neighborRadius;
+
+        Vec2 avgVel = {0,0};
+        int count = 0;
+
+        for (const auto& other : boids) {
+            if (&other == this) continue;
+            if (dist2(pos, other.pos) < r2) {
+                avgVel += other.vel;
+                count++;
+            }
+        }
+
+        if (count == 0) return {0,0};
+
+        avgVel = avgVel / (float)count;
+
+        Vec2 desired = normalize(avgVel) * maxSpeed;
+
+        Vec2 steer = desired - vel;
+        return limitForce(steer, maxForce);
     }
 };
