@@ -16,7 +16,7 @@ struct BoidParams {
     float cohesionWeight = 0.8f;
     float separationWeight = 1.6f;
     float birdSize = 8.0f;
-    float numBoids = 500.0f;
+    int numBoids = 500;
 
     bool drawVelocityVectors = false;
     bool useBruteForce = true;
@@ -67,6 +67,54 @@ struct Slider {
             float normalizedPos = (mousePos.x - x) / width;
             normalizedPos = std::max(0.0f, std::min(1.0f, normalizedPos));
             *value = minVal + normalizedPos * (maxVal - minVal);
+        }
+    }
+};
+
+// Integer Slider struct for UI (increments by whole numbers)
+struct IntSlider {
+    const char* label;
+    int* value;
+    int minVal;
+    int maxVal;
+    float x, y;
+    float width;
+    float height;
+
+    void draw() {
+        // Label with fixed width for alignment
+        DrawText(label, x, y - 12, 11, RAYWHITE);
+        
+        // Slider background with rounded effect
+        DrawRectangle(x, y + 2, width, height, {40, 40, 40, 200});
+        DrawRectangleLines(x, y + 2, width, height, {80, 80, 80, 200});
+        
+        // Slider value position
+        float normalizedValue = (float)(*value - minVal) / (float)(maxVal - minVal);
+        float sliderX = x + normalizedValue * width;
+        
+        // Slider thumb - styled
+        DrawRectangle(sliderX - 5, y - 2, 10, height + 8, RAYWHITE);
+        DrawRectangleLines(sliderX - 5, y - 2, 10, height + 8, {150, 150, 150, 255});
+        
+        // Value display on the right
+        DrawText(TextFormat("%d", *value), x + width + 15, y - 6, 11, RAYWHITE);
+    }
+
+    void update() {
+        if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT)) return;
+        
+        Vector2 mousePos = GetMousePosition();
+        
+        // Check if mouse is over slider (with some tolerance)
+        if (mousePos.x >= x && mousePos.x <= x + width &&
+            mousePos.y >= y - 5 && mousePos.y <= y + 15) {
+            
+            // Calculate new value based on mouse position
+            float normalizedPos = (mousePos.x - x) / width;
+            normalizedPos = std::max(0.0f, std::min(1.0f, normalizedPos));
+            int newValue = minVal + (int)(normalizedPos * (float)(maxVal - minVal));
+            *value = newValue;
         }
     }
 };
@@ -173,7 +221,9 @@ public:
         sliders.push_back({"Cohesion W", &params.cohesionWeight, 0.0f, 3.0f, 0, sliderSpacing * 5, sliderWidth, sliderHeight});
         sliders.push_back({"Sep Weight", &params.separationWeight, 0.0f, 3.0f, 0, sliderSpacing * 6, sliderWidth, sliderHeight});
         sliders.push_back({"Bird Size", &params.birdSize, 2.0f, 20.0f, 0, sliderSpacing * 7, sliderWidth, sliderHeight});
-        sliders.push_back({"Num Boids", &params.numBoids, 10.0f, 1000.0f, 0, sliderSpacing * 8, sliderWidth, sliderHeight});
+        
+        // Initialize int slider for num boids
+        intSliders.push_back({"Num Boids", &params.numBoids, 200, 10000, 0, sliderSpacing * 8, sliderWidth, sliderHeight});
         
         // Initialize radio buttons for algorithm selection
         radioButtons.push_back({"Brute Force", &params.useBruteForce, 0, 0, 14});
@@ -193,6 +243,11 @@ public:
         // Update sliders
         for (auto& slider : sliders) {
             slider.update();
+        }
+        
+        // Update int sliders
+        for (auto& intSlider : intSliders) {
+            intSlider.update();
         }
         
         // Update radio buttons with mutual exclusion
@@ -298,8 +353,16 @@ public:
             sliders[i].draw();
         }
         
+        // Draw int sliders
+        int intSliderStartY = y + 170 + sliders.size() * 36;
+        for (size_t i = 0; i < intSliders.size(); i++) {
+            intSliders[i].x = x + 10;
+            intSliders[i].y = intSliderStartY + i * sliderSpacing;
+            intSliders[i].draw();
+        }
+        
         // Draw algorithm selection section
-        int algorithmStartY = y + 170 + sliders.size() * 36 + 20;
+        int algorithmStartY = y + 170 + sliders.size() * 36 + intSliders.size() * 36 + 20;
         DrawText("Algorithm:", x + 10, algorithmStartY, 14, RAYWHITE);
         DrawLine(x + 10, algorithmStartY + 18, x + width - 10, algorithmStartY + 18, {100, 100, 100, 100});
         
@@ -328,6 +391,7 @@ public:
 
 private:
     std::vector<Slider> sliders;
+    std::vector<IntSlider> intSliders;
     std::vector<RadioButton> radioButtons;
     std::vector<Checkbox> checkboxes;
 };

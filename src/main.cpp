@@ -42,7 +42,7 @@ static void stepBoids(std::vector<Boid>& boids, const Sidebar& sidebar, boidHand
     }
 
     // Handle boid count changes
-    int targetBoids = (int)sidebar.params.numBoids;
+    int targetBoids = sidebar.params.numBoids;
     if (targetBoids > (int)boids.size()) {
         // Spawn new boids
         for (size_t i = boids.size(); i < (size_t)targetBoids; i++) {
