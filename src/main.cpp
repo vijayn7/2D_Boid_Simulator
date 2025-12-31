@@ -42,6 +42,7 @@ static void drawBoid(const Boid& b) {
         RAYWHITE
     );
 
+    // Debug: draw velocity vector, center point
     if (IsKeyDown(KEY_D)) {
         DrawCircleV({b.pos.x, b.pos.y}, 2.0f, RED);
         DrawLineV({b.pos.x, b.pos.y}, {b.pos.x + v.x * 0.2f, b.pos.y + v.y * 0.2f}, BLUE);
