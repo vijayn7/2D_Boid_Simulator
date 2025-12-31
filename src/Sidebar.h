@@ -17,7 +17,8 @@ struct BoidParams {
     float separationWeight = 1.6f;
     float birdSize = 8.0f;
     float numBoids = 500.0f;
-    bool debugMode = false;
+
+    bool drawVelocityVectors = false;
 };
 
 // Slider struct for UI
@@ -67,6 +68,45 @@ struct Slider {
     }
 };
 
+// Checkbox struct for UI
+struct Checkbox {
+    const char* label;
+    bool* value;
+    float x, y;
+    int size;
+
+    void draw() {
+        // Checkbox background (before label)
+        int checkboxX = x;
+        int checkboxY = y - 4;
+        DrawRectangle(checkboxX, checkboxY, size, size, {40, 40, 40, 200});
+        DrawRectangleLines(checkboxX, checkboxY, size, size, {80, 80, 80, 200});
+        
+        // Checkmark if enabled
+        if (*value) {
+            DrawLine(checkboxX + 2, checkboxY + 7, checkboxX + 6, checkboxY + 11, RAYWHITE);
+            DrawLine(checkboxX + 6, checkboxY + 11, checkboxX + 12, checkboxY + 3, RAYWHITE);
+        }
+        
+        // Label (after checkbox)
+        DrawText(label, x + 25, y - 2, 12, RAYWHITE);
+    }
+
+    void update() {
+        if (!IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) return;
+        
+        Vector2 mousePos = GetMousePosition();
+        int checkboxX = x;
+        int checkboxY = y - 4;
+        
+        // Check if clicked on checkbox
+        if (mousePos.x >= checkboxX && mousePos.x <= checkboxX + size &&
+            mousePos.y >= checkboxY && mousePos.y <= checkboxY + size) {
+            *value = !*value;
+        }
+    }
+};
+
 // FPS Graph tracker for sidebar display
 class Sidebar {
 public:
@@ -89,6 +129,9 @@ public:
         sliders.push_back({"Sep Weight", &params.separationWeight, 0.0f, 3.0f, 0, sliderSpacing * 6, sliderWidth, sliderHeight});
         sliders.push_back({"Bird Size", &params.birdSize, 2.0f, 20.0f, 0, sliderSpacing * 7, sliderWidth, sliderHeight});
         sliders.push_back({"Num Boids", &params.numBoids, 10.0f, 1000.0f, 0, sliderSpacing * 8, sliderWidth, sliderHeight});
+        
+        // Initialize checkboxes
+        checkboxes.push_back({"Draw Velocity Vectors", &params.drawVelocityVectors, 0, 0, 14});
     }
 
     void update(float fps) {
@@ -100,6 +143,11 @@ public:
         // Update sliders
         for (auto& slider : sliders) {
             slider.update();
+        }
+        
+        // Update checkboxes
+        for (auto& checkbox : checkboxes) {
+            checkbox.update();
         }
     }
 
@@ -172,31 +220,22 @@ public:
             sliders[i].draw();
         }
         
-        // Draw debug checkbox
-        DrawText("Debug", x + 10, y + 170 + sliders.size() * sliderSpacing + 15, 12, RAYWHITE);
-        int checkboxX = x + 80;
-        int checkboxY = y + 170 + sliders.size() * sliderSpacing + 10;
-        int checkboxSize = 14;
-        DrawRectangle(checkboxX, checkboxY, checkboxSize, checkboxSize, {40, 40, 40, 200});
-        DrawRectangleLines(checkboxX, checkboxY, checkboxSize, checkboxSize, {80, 80, 80, 200});
-        
-        if (params.debugMode) {
-            DrawLine(checkboxX + 2, checkboxY + 7, checkboxX + 6, checkboxY + 11, RAYWHITE);
-            DrawLine(checkboxX + 6, checkboxY + 11, checkboxX + 12, checkboxY + 3, RAYWHITE);
+        // Draw checkboxes below the sliders
+        int checkboxStartY = y + 170 + sliders.size() * 36 + 20;
+        for (size_t i = 0; i < checkboxes.size(); i++) {
+            checkboxes[i].x = x + 10;
+            checkboxes[i].y = checkboxStartY + i * 25;
+            checkboxes[i].draw();
         }
-        
-        // Handle debug toggle click
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            Vector2 mousePos = GetMousePosition();
-            if (mousePos.x >= checkboxX && mousePos.x <= checkboxX + checkboxSize &&
-                mousePos.y >= checkboxY && mousePos.y <= checkboxY + checkboxSize) {
-                params.debugMode = !params.debugMode;
-            }
-        }
+    }
+
+    const BoidParams& getParams() const {
+        return params;
     }
 
 private:
     std::vector<Slider> sliders;
+    std::vector<Checkbox> checkboxes;
 };
 
 #endif

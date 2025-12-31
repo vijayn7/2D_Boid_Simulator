@@ -57,12 +57,7 @@ int main() {
         ClearBackground(BLACK);
 
         // Draw boids on the left
-        for (const auto& b : boids) drawBoid(b, sidebar.params.birdSize, sidebar.params.debugMode);
-
-        // Draw debug info if enabled
-        if (sidebar.params.debugMode) {
-            DrawText(TextFormat("Boids: %d", (int)boids.size()), 10, 10, 12, RAYWHITE);
-        }
+        for (const auto& b : boids) drawBoid(b, sidebar);
 
         // Draw border line between boid section and FPS graph
         DrawLine(W, 0, W, H, RAYWHITE);

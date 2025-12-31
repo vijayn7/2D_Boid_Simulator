@@ -99,7 +99,18 @@ struct Boid {
     }
 };
 
-static void drawBoid(const Boid& b, float birdSize, bool debugMode) {
+static void drawVelocityVector(const Boid& b, float birdSize) {
+    Vec2 velEnd = b.pos + normalize(b.vel) * birdSize * 4.0f;
+    DrawLineEx({b.pos.x, b.pos.y}, {velEnd.x, velEnd.y}, 1.0f, BLUE);
+}
+
+static void DrawAdditionalDebugInfo(const Boid& b, const Sidebar& sidebar) {
+    // Draw velocity vector
+    if (sidebar.getParams().drawVelocityVectors) drawVelocityVector(b, sidebar.getParams().birdSize);
+    
+}
+
+static void drawBoid(const Boid& b, const Sidebar& sidebar) {
 
     float pi = 3.1415926f;
     float halfPi = pi / 2.0f;
@@ -109,7 +120,7 @@ static void drawBoid(const Boid& b, float birdSize, bool debugMode) {
 
     float ang = std::atan2(v.y, v.x);
 
-    float size = birdSize;
+    float size = sidebar.getParams().birdSize;
 
     // Calculate the triangle points from the center position and orientation
     Vec2 forward = { std::cos(ang), std::sin(ang) }; // Tip of the boid
@@ -130,11 +141,7 @@ static void drawBoid(const Boid& b, float birdSize, bool debugMode) {
         RAYWHITE
     );
 
-    // Debug: draw velocity vector, center point
-    if (debugMode) {
-        DrawCircleV({b.pos.x, b.pos.y}, 2.0f, RED);
-        DrawLineV({b.pos.x, b.pos.y}, {b.pos.x + v.x * 0.2f, b.pos.y + v.y * 0.2f}, BLUE);
-    }
+    DrawAdditionalDebugInfo(b, sidebar);
 
 }
 
