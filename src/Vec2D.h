@@ -69,3 +69,13 @@ inline Vec2 clampMag(const Vec2& v, float maxLen) {
     float L = std::sqrt(L2);
     return v * (maxLen / L);
 }
+
+inline float dist2(const Vec2& a, const Vec2& b) {
+    float dx = a.x - b.x;
+    float dy = a.y - b.y;
+    return dx*dx + dy*dy;
+}
+
+inline Vec2 limitForce(const Vec2& v, float maxForce) {
+    return clampMag(v, maxForce);
+}

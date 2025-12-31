@@ -70,8 +70,18 @@ int main() {
 
     const float maxSpeed = 140.0f;
 
+    const float neighborRadius = 70.0f;
+    const float maxForce = 220.0f;
+
+    const float cohesionWeight = 0.9f;
+
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
+
+        for (auto& b : boids) {
+            Vec2 coh = b.cohesion(boids, neighborRadius, maxSpeed, maxForce);
+            b.applyForce(coh * cohesionWeight);
+        }
 
         for (auto& b : boids) {
             b.update(dt, maxSpeed);
@@ -83,7 +93,7 @@ int main() {
 
         for (const auto& b : boids) drawBoid(b);
 
-        DrawText("Step 2: moving boids (no flocking yet)", 20, 20, 20, DARKGRAY);
+        DrawText("Step 3: cohesion only (should start clumping)", 20, 20, 20, DARKGRAY);
         EndDrawing();
 
     }
