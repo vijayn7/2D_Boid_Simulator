@@ -138,6 +138,21 @@ int main() {
         for (auto& b : boids) {
             b.update(dt, sidebar.params.maxSpeed);
             
+            // Apply angular noise if enabled
+            if (sidebar.params.enableAngularNoise && sidebar.params.angularNoiseAmount > 0.0f) {
+                // Sample random angle in range [-noiseAmount, noiseAmount]
+                float randomAngle = (GetRandomValue(0, 100) / 100.0f - 0.5f) * 2.0f * sidebar.params.angularNoiseAmount;
+                
+                // Rotate velocity vector by random angle
+                float cosAngle = std::cos(randomAngle);
+                float sinAngle = std::sin(randomAngle);
+                float newVx = b.vel.x * cosAngle - b.vel.y * sinAngle;
+                float newVy = b.vel.x * sinAngle + b.vel.y * cosAngle;
+                
+                b.vel.x = newVx;
+                b.vel.y = newVy;
+            }
+            
             // Clamp boid position to stay within bounds
             if (b.pos.x < 0) b.pos.x = 0;
             if (b.pos.x > W) b.pos.x = W;

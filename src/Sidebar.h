@@ -26,6 +26,8 @@ struct BoidParams {
     bool useGridHandler = false;
     bool showGridLines = false;
     bool showHeatmap = false;
+    bool enableAngularNoise = true;
+    float angularNoiseAmount = 0.02f;
 };
 
 // Slider struct for UI
@@ -227,10 +229,11 @@ public:
         sliders.push_back({"Wall Avoid", &params.wallAvoidanceWeight, 0.0f, 3.0f, 0, sliderSpacing * 7, sliderWidth, sliderHeight});
         sliders.push_back({"Mouse Avoid", &params.mouseAvoidanceWeight, 0.0f, 3.0f, 0, sliderSpacing * 8, sliderWidth, sliderHeight});
         sliders.push_back({"Bird Size", &params.birdSize, 2.0f, 20.0f, 0, sliderSpacing * 9, sliderWidth, sliderHeight});
+        sliders.push_back({"Angular Noise", &params.angularNoiseAmount, 0.0f, 0.5f, 0, sliderSpacing * 10, sliderWidth, sliderHeight});
         
         // Initialize int slider for num boids
-        intSliders.push_back({"Num Boids", &params.numBoids, 200, 10000, 0, sliderSpacing * 10, sliderWidth, sliderHeight});
-        intSliders.push_back({"Max/Cell", &params.maxBoidsPerCell, 3, 50, 0, sliderSpacing * 11, sliderWidth, sliderHeight});
+        intSliders.push_back({"Num Boids", &params.numBoids, 200, 10000, 0, sliderSpacing * 11, sliderWidth, sliderHeight});
+        intSliders.push_back({"Max/Cell", &params.maxBoidsPerCell, 3, 50, 0, sliderSpacing * 12, sliderWidth, sliderHeight});
         
         // Initialize radio buttons for algorithm selection
         radioButtons.push_back({"Brute Force", &params.useBruteForce, 0, 0, 14});
@@ -240,6 +243,7 @@ public:
         checkboxes.push_back({"Draw Velocity Vectors", &params.drawVelocityVectors, 0, 0, 14});
         checkboxes.push_back({"Show Grid Lines", &params.showGridLines, 0, 25, 14});
         checkboxes.push_back({"Show Heatmap", &params.showHeatmap, 0, 50, 14});
+        checkboxes.push_back({"Angular Noise", &params.enableAngularNoise, 0, 75, 14});
     }
 
     void update(float fps) {
