@@ -16,6 +16,7 @@ struct BoidParams {
     float cohesionWeight = 0.8f;
     float separationWeight = 1.6f;
     float wallAvoidanceWeight = 0.6f;
+    float mouseAvoidanceWeight = 1.2f;
     float birdSize = 8.0f;
     int numBoids = 500;
 
@@ -222,10 +223,11 @@ public:
         sliders.push_back({"Cohesion W", &params.cohesionWeight, 0.0f, 3.0f, 0, sliderSpacing * 5, sliderWidth, sliderHeight});
         sliders.push_back({"Sep Weight", &params.separationWeight, 0.0f, 3.0f, 0, sliderSpacing * 6, sliderWidth, sliderHeight});
         sliders.push_back({"Wall Avoid", &params.wallAvoidanceWeight, 0.0f, 3.0f, 0, sliderSpacing * 7, sliderWidth, sliderHeight});
-        sliders.push_back({"Bird Size", &params.birdSize, 2.0f, 20.0f, 0, sliderSpacing * 8, sliderWidth, sliderHeight});
+        sliders.push_back({"Mouse Avoid", &params.mouseAvoidanceWeight, 0.0f, 3.0f, 0, sliderSpacing * 8, sliderWidth, sliderHeight});
+        sliders.push_back({"Bird Size", &params.birdSize, 2.0f, 20.0f, 0, sliderSpacing * 9, sliderWidth, sliderHeight});
         
         // Initialize int slider for num boids
-        intSliders.push_back({"Num Boids", &params.numBoids, 10, 1000, 0, sliderSpacing * 9, sliderWidth, sliderHeight});
+        intSliders.push_back({"Num Boids", &params.numBoids, 10, 1000, 0, sliderSpacing * 10, sliderWidth, sliderHeight});
         
         // Initialize radio buttons for algorithm selection
         radioButtons.push_back({"Brute Force", &params.useBruteForce, 0, 0, 14});

@@ -112,6 +112,19 @@ int main() {
                 wallAvoid = normalize(wallAvoid) * sidebar.params.maxForce * sidebar.params.wallAvoidanceWeight;
                 b.applyForce(wallAvoid);
             }
+            
+            // Apply mouse avoidance force
+            Vector2 mousePos = GetMousePosition();
+            Vec2 mouse = {mousePos.x, mousePos.y};
+            Vec2 mouseDir = b.pos - mouse;
+            float mouseDist = std::sqrt(mouseDir.lengthSquared());
+            
+            const float mouseAvoidanceRadius = 200.0f;  // Distance at which to start avoiding mouse
+            if (mouseDist < mouseAvoidanceRadius && mouseDist > 0.01f) {
+                float force = (mouseAvoidanceRadius - mouseDist) / mouseAvoidanceRadius;
+                Vec2 mouseAvoid = normalize(mouseDir) * sidebar.params.maxForce * sidebar.params.mouseAvoidanceWeight * force;
+                b.applyForce(mouseAvoid);
+            }
         }
 
         // Update positions and clamp to window bounds
