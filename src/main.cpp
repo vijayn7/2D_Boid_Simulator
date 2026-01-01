@@ -9,8 +9,8 @@
 #include "gridHandler.h"
 
 int main() {
-    const int W = 1000;
-    const int H = 700;
+    const int W = 1500;
+    const int H = 1000;
     const int graphW = 350;
     const int graphH = 300;
 
@@ -49,11 +49,18 @@ int main() {
 
     // Create handler implementations
     std::unique_ptr<boidHandler> bruteForce = std::make_unique<bruteForceHandler>();
-    std::unique_ptr<boidHandler> gridSpatial = std::make_unique<gridHandler>(W, H, 50);
+    std::unique_ptr<boidHandler> gridSpatial = std::make_unique<gridHandler>(W, H, sidebar.params.maxBoidsPerCell);
     boidHandler* currentHandler = bruteForce.get();
+    int lastMaxBoidsPerCell = sidebar.params.maxBoidsPerCell;
 
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
+
+        // Recreate gridHandler if maxBoidsPerCell changed
+        if (lastMaxBoidsPerCell != sidebar.params.maxBoidsPerCell) {
+            gridSpatial = std::make_unique<gridHandler>(W, H, sidebar.params.maxBoidsPerCell);
+            lastMaxBoidsPerCell = sidebar.params.maxBoidsPerCell;
+        }
 
         // Select current handler based on UI
         currentHandler = sidebar.params.useGridHandler ? gridSpatial.get() : bruteForce.get();

@@ -19,6 +19,7 @@ struct BoidParams {
     float mouseAvoidanceWeight = 1.2f;
     float birdSize = 8.0f;
     int numBoids = 500;
+    int maxBoidsPerCell = 10;
 
     bool drawVelocityVectors = false;
     bool useBruteForce = true;
@@ -227,7 +228,8 @@ public:
         sliders.push_back({"Bird Size", &params.birdSize, 2.0f, 20.0f, 0, sliderSpacing * 9, sliderWidth, sliderHeight});
         
         // Initialize int slider for num boids
-        intSliders.push_back({"Num Boids", &params.numBoids, 10, 1000, 0, sliderSpacing * 10, sliderWidth, sliderHeight});
+        intSliders.push_back({"Num Boids", &params.numBoids, 200, 10000, 0, sliderSpacing * 10, sliderWidth, sliderHeight});
+        intSliders.push_back({"Max/Cell", &params.maxBoidsPerCell, 3, 50, 0, sliderSpacing * 11, sliderWidth, sliderHeight});
         
         // Initialize radio buttons for algorithm selection
         radioButtons.push_back({"Brute Force", &params.useBruteForce, 0, 0, 14});

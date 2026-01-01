@@ -17,13 +17,12 @@ private:
     // grid parameters
     int width;
     int height;
+    int maxBoidsPerCell;
 
     std::vector<std::vector<std::vector<cell>>> grid;
 
-    const int maxBoidsPerCell = 10;
-
 public:
-    gridHandler(int w, int h, int cSize) : width(w), height(h) {
+    gridHandler(int w, int h, int maxBoids) : width(w), height(h), maxBoidsPerCell(maxBoids) {
         width = w;
         height = h;
 
