@@ -1,3 +1,6 @@
+#ifndef GRIDHANDLER_H
+#define GRIDHANDLER_H
+
 #include <vector>
 #include "Boid.h"
 #include "boidHandler.h"
@@ -179,3 +182,5 @@ public:
     }
 
 };
+
+#endif

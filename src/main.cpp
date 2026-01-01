@@ -5,57 +5,8 @@
 #include "Boid.h"
 #include "Sidebar.h"
 #include "boidHandler.h"
-#include "bruteForceHandler.cpp"
-#include "gridHandler.cpp"
-
-// Function to update boids using the handler interface
-static void stepBoids(std::vector<Boid>& boids, const Sidebar& sidebar, boidHandler* handler, float dt, int W, int H) {
-    
-    // Create vector of pointers for handler
-    std::vector<Boid*> boidPtrs;
-    boidPtrs.reserve(boids.size());
-    for (auto& b : boids) {
-        boidPtrs.push_back(&b);
-    }
-    
-    // Update handler with current boid positions
-    handler->setBoids(boidPtrs);
-    
-    for (auto& b : boids) {
-        // Get nearby boids using the handler
-        float maxRadius = std::max(sidebar.params.neighborRadius, sidebar.params.separationRadius);
-        std::vector<Boid*> nearbyBoids = handler->getBoidsInRange(b.pos, maxRadius);
-        
-        // Compute forces based on nearby boids
-        Vec2 sep = b.separation(nearbyBoids, sidebar.params.separationRadius, sidebar.params.maxSpeed, sidebar.params.maxForce);
-        Vec2 ali = b.alignment(nearbyBoids, sidebar.params.neighborRadius, sidebar.params.maxSpeed, sidebar.params.maxForce);
-        Vec2 coh = b.cohesion(nearbyBoids, sidebar.params.neighborRadius, sidebar.params.maxSpeed, sidebar.params.maxForce);
-
-        b.applyForce(sep * sidebar.params.separationWeight);
-        b.applyForce(ali * sidebar.params.alignmentWeight);
-        b.applyForce(coh * sidebar.params.cohesionWeight);
-    }
-
-    for (auto& b : boids) {
-        b.update(dt, sidebar.params.maxSpeed);
-        wrap(b.pos, W, H);
-    }
-
-    // Handle boid count changes
-    int targetBoids = sidebar.params.numBoids;
-    if (targetBoids > (int)boids.size()) {
-        // Spawn new boids
-        for (size_t i = boids.size(); i < (size_t)targetBoids; i++) {
-            Boid b;
-            b.pos = { (float)GetRandomValue(0, W-1), (float)GetRandomValue(0, H-1) };
-            b.vel = { (float)GetRandomValue(-100, 100), (float)GetRandomValue(-100, 100) };
-            boids.push_back(b);
-        }
-    } else if (targetBoids < (int)boids.size()) {
-        // Remove excess boids
-        boids.resize(targetBoids);
-    }
-}
+#include "bruteForceHandler.h"
+#include "gridHandler.h"
 
 int main() {
     const int W = 1000;
@@ -78,11 +29,9 @@ int main() {
     }
 
     const float maxSpeed = 140.0f;
-
     const float neighborRadius = 70.0f;
     const float maxForce = 220.0f;
     const float separationRadius = 28.0f;
-
     const float alignmentWeight = 1.0f;
     const float cohesionWeight  = 0.8f;
     const float separationWeight = 1.6f;
@@ -96,7 +45,7 @@ int main() {
     sidebar.params.alignmentWeight = alignmentWeight;
     sidebar.params.cohesionWeight = cohesionWeight;
     sidebar.params.separationWeight = separationWeight;
-    sidebar.params.numBoids = 500.0f;
+    sidebar.params.numBoids = 500;
 
     // Create handler implementations
     std::unique_ptr<boidHandler> bruteForce = std::make_unique<bruteForceHandler>();
@@ -109,7 +58,85 @@ int main() {
         // Select current handler based on UI
         currentHandler = sidebar.params.useGridHandler ? gridSpatial.get() : bruteForce.get();
 
-        stepBoids(boids, sidebar, currentHandler, dt, W, H);
+        // ====== STEP BOIDS ======
+        // Create vector of pointers for handler
+        std::vector<Boid*> boidPtrs;
+        boidPtrs.reserve(boids.size());
+        for (auto& b : boids) {
+            boidPtrs.push_back(&b);
+        }
+        
+        // Update handler with current boid positions
+        currentHandler->setBoids(boidPtrs);
+        
+        // Calculate forces
+        for (auto& b : boids) {
+            float maxRadius = std::max(sidebar.params.neighborRadius, sidebar.params.separationRadius);
+            std::vector<Boid*> nearbyBoids = currentHandler->getBoidsInRange(b.pos, maxRadius);
+            
+            Vec2 sep = b.separation(nearbyBoids, sidebar.params.separationRadius, sidebar.params.maxSpeed, sidebar.params.maxForce);
+            Vec2 ali = b.alignment(nearbyBoids, sidebar.params.neighborRadius, sidebar.params.maxSpeed, sidebar.params.maxForce);
+            Vec2 coh = b.cohesion(nearbyBoids, sidebar.params.neighborRadius, sidebar.params.maxSpeed, sidebar.params.maxForce);
+
+            b.applyForce(sep * sidebar.params.separationWeight);
+            b.applyForce(ali * sidebar.params.alignmentWeight);
+            b.applyForce(coh * sidebar.params.cohesionWeight);
+            
+            // Apply wall avoidance force
+            const float wallDistance = 150.0f;  // Distance at which to start avoiding walls
+            Vec2 wallAvoid = {0, 0};
+            
+            // Left wall
+            if (b.pos.x < wallDistance) {
+                float force = (wallDistance - b.pos.x) / wallDistance;
+                wallAvoid.x += force;
+            }
+            // Right wall
+            if (b.pos.x > W - wallDistance) {
+                float force = (b.pos.x - (W - wallDistance)) / wallDistance;
+                wallAvoid.x -= force;
+            }
+            // Top wall
+            if (b.pos.y < wallDistance) {
+                float force = (wallDistance - b.pos.y) / wallDistance;
+                wallAvoid.y += force;
+            }
+            // Bottom wall
+            if (b.pos.y > H - wallDistance) {
+                float force = (b.pos.y - (H - wallDistance)) / wallDistance;
+                wallAvoid.y -= force;
+            }
+            
+            // Apply wall avoidance as a force with weight control
+            if (wallAvoid.lengthSquared() > 0) {
+                wallAvoid = normalize(wallAvoid) * sidebar.params.maxForce * sidebar.params.wallAvoidanceWeight;
+                b.applyForce(wallAvoid);
+            }
+        }
+
+        // Update positions and clamp to window bounds
+        for (auto& b : boids) {
+            b.update(dt, sidebar.params.maxSpeed);
+            
+            // Clamp boid position to stay within bounds
+            if (b.pos.x < 0) b.pos.x = 0;
+            if (b.pos.x > W) b.pos.x = W;
+            if (b.pos.y < 0) b.pos.y = 0;
+            if (b.pos.y > H) b.pos.y = H;
+        }
+
+        // Handle boid count changes
+        int targetBoids = sidebar.params.numBoids;
+        if (targetBoids > (int)boids.size()) {
+            for (size_t i = boids.size(); i < (size_t)targetBoids; i++) {
+                Boid b;
+                b.pos = { (float)GetRandomValue(0, W-1), (float)GetRandomValue(0, H-1) };
+                b.vel = { (float)GetRandomValue(-100, 100), (float)GetRandomValue(-100, 100) };
+                boids.push_back(b);
+            }
+        } else if (targetBoids < (int)boids.size()) {
+            boids.resize(targetBoids);
+        }
 
         // Update FPS graph and sliders
         sidebar.update(GetFPS());
@@ -117,7 +144,7 @@ int main() {
         BeginDrawing();
         ClearBackground(BLACK);
 
-        // Draw grid lines if enabled and using grid handler (draw first so boids appear on top)
+        // Draw grid lines if enabled and using grid handler
         if (sidebar.params.showGridLines && sidebar.params.useGridHandler) {
             gridHandler* gh = static_cast<gridHandler*>(gridSpatial.get());
             gh->drawGrid();
@@ -133,7 +160,6 @@ int main() {
         sidebar.draw(W + 20, 20, graphW, graphH);
 
         EndDrawing();
-
     }
 
     CloseWindow();

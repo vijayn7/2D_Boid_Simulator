@@ -1,3 +1,6 @@
+#ifndef BRUTEFORCEHANDLER_H
+#define BRUTEFORCEHANDLER_H
+
 #include <vector>
 #include "Boid.h"
 #include "boidHandler.h"
@@ -25,3 +28,5 @@ public:
     }
 
 };
+
+#endif

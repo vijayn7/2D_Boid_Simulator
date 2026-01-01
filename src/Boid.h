@@ -1,6 +1,7 @@
 #pragma once
 #include "Vec2D.h"
 #include <vector>
+#include <cmath>
 #include "Sidebar.h"
 
 // Forward declaration
@@ -148,10 +149,25 @@ static void drawBoid(const Boid& b, const Sidebar& sidebar) {
 
 }
 
-// Wrap around the screen edges
-static void wrap(Vec2& p, int W, int H) {
-    if (p.x < 0) p.x += W;
-    if (p.x >= W) p.x -= W;
-    if (p.y < 0) p.y += H;
-    if (p.y >= H) p.y -= H;
-}
+// Keep boids within window bounds and bounce off edges
+static void constrainToWindow(Boid& b, int W, int H) {
+    const float margin = 5.0f;  // Bounce slightly before hitting edge
+    
+    // Bounce off left/right walls
+    if (b.pos.x < margin) {
+        b.pos.x = margin;
+        b.vel.x = std::abs(b.vel.x);  // Reverse and ensure positive direction
+    } else if (b.pos.x > W - margin) {
+        b.pos.x = W - margin;
+        b.vel.x = -std::abs(b.vel.x);  // Reverse and ensure negative direction
+    }
+    
+    // Bounce off top/bottom walls
+    if (b.pos.y < margin) {
+        b.pos.y = margin;
+        b.vel.y = std::abs(b.vel.y);  // Reverse and ensure positive direction
+    } else if (b.pos.y > H - margin) {
+        b.pos.y = H - margin;
+        b.vel.y = -std::abs(b.vel.y);  // Reverse and ensure negative direction
+    }
+};

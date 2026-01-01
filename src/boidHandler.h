@@ -3,9 +3,7 @@
 
 #include <vector>
 #include "Vec2D.h"
-
-// Forward declarations
-struct Boid;
+#include "Boid.h"
 
 class boidHandler {
 public:
