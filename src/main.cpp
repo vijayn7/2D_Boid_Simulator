@@ -164,14 +164,14 @@ int main() {
         BeginDrawing();
         ClearBackground(BLACK);
 
-        // Draw grid lines if enabled and using grid handler
-        if (sidebar.params.showGridLines && sidebar.params.useGridHandler) {
-            gridHandler* gh = static_cast<gridHandler*>(gridSpatial.get());
-            gh->drawGrid();
-        }
-
         // Draw boids on the left
         for (const auto& b : boids) drawBoid(b, sidebar);
+
+        // Draw grid lines/heatmap on top if enabled and using grid handler
+        if ((sidebar.params.showGridLines || sidebar.params.showHeatmap) && sidebar.params.useGridHandler) {
+            gridHandler* gh = static_cast<gridHandler*>(gridSpatial.get());
+            gh->drawGrid(sidebar.params.showHeatmap);
+        }
 
         // Draw border line between boid section and FPS graph
         DrawLine(W, 0, W, H, RAYWHITE);

@@ -167,10 +167,41 @@ public:
         splitBoidsIntoGrid(const_cast<std::vector<Boid*>&>(allBoids));
     }
 
-    void drawGrid() {
+    void drawGrid(bool showHeatmap = false) {
         for (const auto& row : grid) {
             for (const auto& col : row) {
                 for (const auto& c : col) {
+                    if (showHeatmap) {
+                        // Calculate percent capacity (0.0 to 1.0)
+                        float percent = (float)c.boidsInCell.size() / (float)maxBoidsPerCell;
+                        if (percent > 1.0f) percent = 1.0f;
+                        
+                        // Color gradient: blue (0%) -> green (50%) -> red (100%)
+                        Color heatColor;
+                        if (percent < 0.5f) {
+                            // Blue to green
+                            float t = percent * 2.0f;
+                            heatColor = {(unsigned char)(0 * (1-t) + 0 * t),
+                                        (unsigned char)(100 * (1-t) + 200 * t),
+                                        (unsigned char)(255 * (1-t) + 0 * t),
+                                        100}; // Transparent
+                        } else {
+                            // Green to red
+                            float t = (percent - 0.5f) * 2.0f;
+                            heatColor = {(unsigned char)(0 * (1-t) + 255 * t),
+                                        (unsigned char)(200 * (1-t) + 100 * t),
+                                        (unsigned char)(0),
+                                        100}; // Transparent
+                        }
+                        
+                        // Draw filled rectangle with heatmap color
+                        DrawRectangle((int)c.topLeft.x, (int)c.topLeft.y,
+                                     (int)(c.bottomRight.x - c.topLeft.x),
+                                     (int)(c.bottomRight.y - c.topLeft.y),
+                                     heatColor);
+                    }
+                    
+                    // Draw grid lines
                     DrawRectangleLines((int)c.topLeft.x, (int)c.topLeft.y,
                                        (int)(c.bottomRight.x - c.topLeft.x),
                                        (int)(c.bottomRight.y - c.topLeft.y),

@@ -25,6 +25,7 @@ struct BoidParams {
     bool useBruteForce = true;
     bool useGridHandler = false;
     bool showGridLines = false;
+    bool showHeatmap = false;
 };
 
 // Slider struct for UI
@@ -238,6 +239,7 @@ public:
         // Initialize checkboxes
         checkboxes.push_back({"Draw Velocity Vectors", &params.drawVelocityVectors, 0, 0, 14});
         checkboxes.push_back({"Show Grid Lines", &params.showGridLines, 0, 25, 14});
+        checkboxes.push_back({"Show Heatmap", &params.showHeatmap, 0, 50, 14});
     }
 
     void update(float fps) {
